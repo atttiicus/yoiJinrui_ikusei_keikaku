@@ -5,68 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="theme-color" content="#1a1a2e" />
     <title>Tauri Mobile Demo</title>
-    <link rel="stylesheet" href="/src/styles.css" />
   </head>
   <body>
-    <div id="app">
-      <div class="container">
-        <header class="header">
-          <div class="logo">⚡</div>
-          <h1 class="title">Tauri Mobile</h1>
-          <p class="subtitle">跨平台移动应用 DEMO</p>
-        </header>
-
-        <div class="card">
-          <h2>平台信息</h2>
-          <div id="platform-info" class="info-grid">
-            <div class="info-item">
-              <span class="label">平台</span>
-              <span class="value" id="platform">加载中...</span>
-            </div>
-            <div class="info-item">
-              <span class="label">架构</span>
-              <span class="value" id="arch">加载中...</span>
-            </div>
-            <div class="info-item">
-              <span class="label">版本</span>
-              <span class="value" id="app-version">加载中...</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <h2>调用 Rust 后端</h2>
-          <p class="desc">输入你的名字，调用 Rust 函数返回问候语</p>
-          <div class="input-group">
-            <input
-              id="greet-input"
-              type="text"
-              placeholder="输入你的名字"
-              maxlength="20"
-            />
-            <button id="greet-btn" class="btn btn-primary">
-              打招呼
-            </button>
-          </div>
-          <div id="greet-result" class="result hidden"></div>
-        </div>
-
-        <div class="card">
-          <h2>计数器</h2>
-          <p class="desc">测试状态管理</p>
-          <div class="counter-group">
-            <button id="dec-btn" class="btn btn-secondary">−</button>
-            <span id="counter-val" class="counter-display">0</span>
-            <button id="inc-btn" class="btn btn-secondary">+</button>
-          </div>
-          <button id="reset-btn" class="btn btn-outline">重置</button>
-        </div>
-
-        <footer class="footer">
-          <p>基于 Tauri v2 构建 · Rust + Web</p>
-        </footer>
-      </div>
-    </div>
-    <script type="module" src="/src/main.js"></script>
+    <div id="app"></div>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

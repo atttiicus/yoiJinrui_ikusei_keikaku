@@ -1,6 +1,8 @@
 import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
 
 export default defineConfig({
+  plugins: [react()],
   clearScreen: false,
   server: {
     port: 1420,
@@ -12,14 +14,11 @@ export default defineConfig({
   },
   envPrefix: ["VITE_", "TAURI_"],
   build: {
-    // Android target
     target:
       process.env.TAURI_ENV_PLATFORM === "android" ||
       process.env.TAURI_ENV_PLATFORM === "ios"
         ? "safari13"
-        : process.env.TAURI_ENV_PLATFORM === "windows"
-          ? "chrome105"
-          : "chrome105",
+        : "chrome105",
     minify: !process.env.TAURI_ENV_DEBUG ? "esbuild" : false,
     sourcemap: !!process.env.TAURI_ENV_DEBUG,
   },

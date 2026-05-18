@@ -6,6 +6,9 @@
   "permissions": [
     "core:default",
     "shell:allow-open",
-    "os:default"
+    "os:default",
+    "fs:allow-download-write",
+    "fs:allow-download-read",
+    "fs:scope-download-recursive"
   ]
 }
