@@ -25,16 +25,11 @@ export default function DataPage() {
       const filename = `yoijinrui_${new Date().toISOString().split('T')[0]}.json`
 
       if (inTauri) {
-        // 5 秒超时，防止命令卡死没有任何反馈
-        const timeout = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('命令超时，请重新打包 APK 后重试')), 5000)
-        )
-        const path = await Promise.race([
-          invoke<string>('export_file', { filename, content: json }),
-          timeout,
-        ])
-        const savedName = path.split(/[/\\]/).pop() ?? filename
-        showMsg(`已保存：${savedName}`, true)
+        // Android 由 Kotlin FileExportPlugin 写入系统下载目录（MediaStore）
+        // 桌面端由 Rust 写入系统下载目录，统一入口
+        const path = await invoke<string>('export_to_downloads', { filename, content: json })
+        showMsg(`已保存到下载目录：${filename}`, true)
+        console.log('export path:', path)
       } else {
         // 浏览器开发环境
         const blob = new Blob([json], { type: 'application/json' })
