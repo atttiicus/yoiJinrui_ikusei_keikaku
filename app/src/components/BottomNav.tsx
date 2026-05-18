@@ -17,10 +17,10 @@ export default function BottomNav({ current, onChange }: Props) {
       {ITEMS.map(({ page, icon, label }) => (
         <button
           key={page}
-          className={`nav-item ${current === page ? 'active' : ''}`}
+          className={`nav-item ${current === page ? 'text-accent' : ''}`}
           onClick={() => onChange(page)}
         >
-          <span className="nav-icon">{icon}</span>
+          <span className="text-[22px] leading-none">{icon}</span>
           <span>{label}</span>
         </button>
       ))}

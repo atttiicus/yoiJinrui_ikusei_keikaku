@@ -13,26 +13,27 @@ export default function HabitFormModal({ onSave, onClose }: Props) {
 
   const canSave = name.trim().length > 0 && type !== null
 
-  const handleSave = () => {
-    if (!canSave) return
-    onSave(name.trim(), note.trim(), type!)
-  }
-
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-sheet" onClick={e => e.stopPropagation()}>
+
+        {/* 头部 */}
         <div className="modal-header">
           <span className="modal-title">添加习惯</span>
-          <div className="modal-header-actions">
+          <div className="flex gap-2.5 items-center">
             <button className="modal-cancel" onClick={onClose}>取消</button>
-            <button className="modal-save" disabled={!canSave} onClick={handleSave}>保存</button>
+            <button className="modal-save" disabled={!canSave} onClick={() => canSave && onSave(name.trim(), note.trim(), type!)}>
+              保存
+            </button>
           </div>
         </div>
 
-        <div className="modal-body">
-          <div className="form-field">
-            <label>标题 *</label>
+        {/* 表单 */}
+        <div className="flex flex-col gap-4 p-5">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[12px] text-muted font-medium">标题 *</label>
             <input
+              className="form-input"
               type="text"
               placeholder="习惯名称"
               maxLength={30}
@@ -42,9 +43,10 @@ export default function HabitFormModal({ onSave, onClose }: Props) {
             />
           </div>
 
-          <div className="form-field">
-            <label>注释</label>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[12px] text-muted font-medium">注释</label>
             <textarea
+              className="form-input resize-none"
               rows={3}
               placeholder="添加注释（可选）"
               value={note}
@@ -52,24 +54,29 @@ export default function HabitFormModal({ onSave, onClose }: Props) {
             />
           </div>
 
-          {/* 类型选择器，参考图：底部两个圆形按钮 */}
-          <div className="habit-type-selector">
+          {/* 类型选择器 */}
+          <div className="flex justify-center gap-10 pt-2 pb-3">
             <button
-              className={`type-btn ${type === 'good' ? 'selected-good' : ''}`}
+              className={`type-btn ${type === 'good' ? 'text-good' : ''}`}
               onClick={() => setType('good')}
             >
-              <div className="type-btn-circle">+</div>
+              <div className={`type-btn-circle ${type === 'good' ? 'bg-good-dim border-good text-good' : ''}`}>
+                +
+              </div>
               <span>好习惯</span>
             </button>
             <button
-              className={`type-btn ${type === 'bad' ? 'selected-bad' : ''}`}
+              className={`type-btn ${type === 'bad' ? 'text-bad' : ''}`}
               onClick={() => setType('bad')}
             >
-              <div className="type-btn-circle">−</div>
+              <div className={`type-btn-circle ${type === 'bad' ? 'bg-bad-dim border-bad text-bad' : ''}`}>
+                −
+              </div>
               <span>坏习惯</span>
             </button>
           </div>
         </div>
+
       </div>
     </div>
   )

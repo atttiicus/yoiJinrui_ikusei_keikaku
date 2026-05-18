@@ -10,20 +10,16 @@ export default function HabitsPage() {
 
   const handleAdd = (name: string, note: string, type: HabitType) => {
     const habit: Habit = {
-      id: crypto.randomUUID(),
-      name,
-      note,
-      type,
+      id: crypto.randomUUID(), name, note, type,
       createdAt: new Date().toISOString().split('T')[0],
-      totalDays: 0,
-      isAchieved: false,
+      totalDays: 0, isAchieved: false,
     }
     dispatch({ type: 'ADD_HABIT', habit })
     setShowForm(false)
   }
 
-  const goodHabits = state.habits.filter(h => h.type === 'good')
-  const badHabits  = state.habits.filter(h => h.type === 'bad')
+  const good = state.habits.filter(h => h.type === 'good')
+  const bad  = state.habits.filter(h => h.type === 'bad')
 
   return (
     <div className="page">
@@ -34,25 +30,25 @@ export default function HabitsPage() {
 
       {state.habits.length === 0 ? (
         <div className="empty-state">
-          <div className="empty-state-icon">🌱</div>
-          <div className="empty-state-text">还没有任何习惯，点击 + 开始添加</div>
+          <div className="text-[48px] mb-3">🌱</div>
+          <div className="text-sm">还没有任何习惯，点击 + 开始添加</div>
         </div>
       ) : (
-        <div className="habits-list">
-          {goodHabits.length > 0 && (
+        <div className="px-4 flex flex-col gap-2.5">
+          {good.length > 0 && (
             <>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)', padding: '4px 0 2px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                好习惯 · {goodHabits.length}
+              <div className="text-[12px] text-muted pt-1 pb-0.5 font-semibold uppercase tracking-wider">
+                好习惯 · {good.length}
               </div>
-              {goodHabits.map(h => <HabitItem key={h.id} habit={h} />)}
+              {good.map(h => <HabitItem key={h.id} habit={h} />)}
             </>
           )}
-          {badHabits.length > 0 && (
+          {bad.length > 0 && (
             <>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)', padding: '12px 0 2px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                坏习惯 · {badHabits.length}
+              <div className="text-[12px] text-muted pt-3 pb-0.5 font-semibold uppercase tracking-wider">
+                坏习惯 · {bad.length}
               </div>
-              {badHabits.map(h => <HabitItem key={h.id} habit={h} />)}
+              {bad.map(h => <HabitItem key={h.id} habit={h} />)}
             </>
           )}
         </div>
@@ -61,10 +57,7 @@ export default function HabitsPage() {
       <button className="fab" onClick={() => setShowForm(true)}>+</button>
 
       {showForm && (
-        <HabitFormModal
-          onSave={handleAdd}
-          onClose={() => setShowForm(false)}
-        />
+        <HabitFormModal onSave={handleAdd} onClose={() => setShowForm(false)} />
       )}
     </div>
   )
