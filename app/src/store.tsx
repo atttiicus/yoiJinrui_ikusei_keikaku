@@ -29,6 +29,8 @@ type Action =
   | { type: 'COMPLETE_HABIT'; habitId: string }
   | { type: 'GAVE_IN'; habitId: string }
   | { type: 'DAILY_RESET' }
+  | { type: 'SET_SCORES'; daily: number; weekly: number; comprehensive: number }
+  | { type: 'SET_HABIT_DAYS'; habitId: string; days: number }
 
 function applyScore(scores: AppState['scores'], delta: number): AppState['scores'] {
   const next = Math.max(0, scores.daily + delta)
@@ -133,6 +135,27 @@ function reducer(state: AppState, action: Action): AppState {
           lastDate: todayStr(),
         },
       }
+
+    case 'SET_SCORES':
+      return {
+        ...state,
+        scores: {
+          ...state.scores,
+          daily:         Math.min(100, Math.max(0, action.daily)),
+          weekly:        Math.max(0, action.weekly),
+          comprehensive: Math.max(0, action.comprehensive),
+        },
+      }
+
+    case 'SET_HABIT_DAYS': {
+      const days = Math.max(0, action.days)
+      return {
+        ...state,
+        habits: state.habits.map(h =>
+          h.id !== action.habitId ? h : { ...h, totalDays: days, isAchieved: days >= ACHIEVE_DAYS }
+        ),
+      }
+    }
 
     default:
       return state
