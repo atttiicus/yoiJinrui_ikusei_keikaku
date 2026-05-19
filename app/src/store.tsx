@@ -31,6 +31,8 @@ type Action =
   | { type: 'DAILY_RESET' }
   | { type: 'SET_SCORES'; daily: number; weekly: number; comprehensive: number }
   | { type: 'SET_HABIT_DAYS'; habitId: string; days: number }
+  | { type: 'CLEAR_TODAY_LOGS' }
+  | { type: 'SET_YESTERDAY_GAVE_IN'; habitId: string }
 
 function applyScore(scores: AppState['scores'], delta: number): AppState['scores'] {
   const next = Math.max(0, scores.daily + delta)
@@ -155,6 +157,23 @@ function reducer(state: AppState, action: Action): AppState {
           h.id !== action.habitId ? h : { ...h, totalDays: days, isAchieved: days >= ACHIEVE_DAYS }
         ),
       }
+    }
+
+    case 'CLEAR_TODAY_LOGS': {
+      const today = todayStr()
+      return { ...state, logs: state.logs.filter(l => l.date !== today) }
+    }
+
+    case 'SET_YESTERDAY_GAVE_IN': {
+      const d = new Date()
+      d.setDate(d.getDate() - 1)
+      const yesterday = d.toISOString().split('T')[0]
+      // 移除昨天该习惯的旧记录，插入一条 gaveIn=true 的记录
+      const logs: HabitLog[] = [
+        ...state.logs.filter(l => !(l.habitId === action.habitId && l.date === yesterday)),
+        { habitId: action.habitId, date: yesterday, count: 0, gaveIn: true },
+      ]
+      return { ...state, logs }
     }
 
     default:

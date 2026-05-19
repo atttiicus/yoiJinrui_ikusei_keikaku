@@ -193,6 +193,64 @@ export default function SettingsPage() {
         </>
       )}
 
+      {/* ── 控制台：调试工具 ─────────────────────────────────── */}
+      <SectionTitle>控制台 · 调试</SectionTitle>
+      <div className="card">
+        {/* 清除今日打卡 */}
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <div className="text-sm text-fg">清除今日打卡记录</div>
+            <div className="text-[11px] text-muted mt-0.5">重置今日所有习惯的完成/放纵状态</div>
+          </div>
+          <button
+            className="btn bg-input border border-line text-muted px-3 py-1.5 text-xs"
+            onClick={() => {
+              dispatch({ type: 'CLEAR_TODAY_LOGS' })
+              showMsg('今日打卡记录已清除', true)
+            }}
+          >
+            清除
+          </button>
+        </div>
+
+        {/* 模拟昨日放纵（仅坏习惯） */}
+        {state.habits.filter(h => h.type === 'bad').length > 0 && (
+          <>
+            <div className="text-[11px] text-muted mb-2 font-medium">
+              模拟昨日放纵（测试连续放纵逻辑）
+            </div>
+            <div className="flex flex-col gap-2">
+              {state.habits.filter(h => h.type === 'bad').map(h => {
+                const d = new Date(); d.setDate(d.getDate() - 1)
+                const yesterday = d.toISOString().split('T')[0]
+                const alreadySet = state.logs.some(
+                  l => l.habitId === h.id && l.date === yesterday && l.gaveIn
+                )
+                return (
+                  <div key={h.id} className="flex items-center justify-between">
+                    <div className="flex-1 min-w-0">
+                      <span className="text-sm text-fg truncate">{h.name}</span>
+                      <span className="text-[11px] text-muted ml-2">
+                        {alreadySet ? '✓ 昨日已标记放纵' : `当前 ${h.totalDays} 天`}
+                      </span>
+                    </div>
+                    <button
+                      className={`btn px-3 py-1.5 text-xs ${alreadySet ? 'bg-bad-dim text-bad border border-bad-dim' : 'bg-input border border-line text-muted'}`}
+                      onClick={() => {
+                        dispatch({ type: 'SET_YESTERDAY_GAVE_IN', habitId: h.id })
+                        showMsg(`已为「${h.name}」模拟昨日放纵`, true)
+                      }}
+                    >
+                      {alreadySet ? '已设置' : '模拟'}
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+          </>
+        )}
+      </div>
+
       {/* ── 数据管理 ─────────────────────────────────────────── */}
       <SectionTitle>数据管理</SectionTitle>
       <div className="card">
