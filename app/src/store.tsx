@@ -85,6 +85,28 @@ function reducer(state: AppState, action: Action): AppState {
 
     case 'GAVE_IN': {
       const date = todayStr()
+
+      // 昨天是否也放纵了（用于判断连续两天放纵）
+      const d = new Date()
+      d.setDate(d.getDate() - 1)
+      const yesterdayStr = d.toISOString().split('T')[0]
+      const gaveInYesterday = state.logs.some(
+        l => l.habitId === action.habitId && l.date === yesterdayStr && l.gaveIn
+      )
+
+      const habit = state.habits.find(h => h.id === action.habitId)!
+      const days  = habit.totalDays
+
+      // 坚持天数惩罚规则：
+      // <= 15 天 → 直接清零
+      // > 15 天  → 扣 1 天；若连续两天放纵则清零
+      let newDays = days
+      if (days > 15) {
+        newDays = gaveInYesterday ? 0 : Math.max(0, days - 1)
+      } else {
+        newDays = 0
+      }
+
       const existing = state.logs.find(l => l.habitId === action.habitId && l.date === date)
       const logs: HabitLog[] = existing
         ? state.logs.map(l =>
@@ -94,7 +116,11 @@ function reducer(state: AppState, action: Action): AppState {
           )
         : [...state.logs, { habitId: action.habitId, date, count: 0, gaveIn: true }]
 
-      return { ...state, logs, scores: applyScore(state.scores, BAD_GAVE_IN) }
+      const habits = state.habits.map(h =>
+        h.id !== action.habitId ? h : { ...h, totalDays: newDays, isAchieved: newDays >= ACHIEVE_DAYS }
+      )
+
+      return { ...state, habits, logs, scores: applyScore(state.scores, BAD_GAVE_IN) }
     }
 
     case 'DAILY_RESET':
