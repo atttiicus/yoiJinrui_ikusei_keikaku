@@ -33,3 +33,8 @@ desktop.ini
 .idea/
 *.swp
 *.swo
+
+# other
+.agents/
+CLAUDE.md
+skills-lock.json

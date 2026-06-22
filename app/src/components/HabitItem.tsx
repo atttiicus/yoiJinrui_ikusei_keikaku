@@ -21,7 +21,6 @@ export default function HabitItem({ habit }: Props) {
   const count  = log?.count ?? 0
   const gaveIn = log?.gaveIn ?? false
 
-  // 昨天是否放纵（用于 gaveInMsg）
   const d = new Date(); d.setDate(d.getDate() - 1)
   const yesterday = d.toISOString().split('T')[0]
   const gaveInYesterday = state.logs.some(
@@ -31,40 +30,41 @@ export default function HabitItem({ habit }: Props) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [confirmGaveIn, setConfirmGaveIn] = useState(false)
 
-  const pct = Math.min((habit.totalDays / ACHIEVE_DAYS) * 100, 100)
+  const pct          = Math.min((habit.totalDays / ACHIEVE_DAYS) * 100, 100)
   const achieveLabel = habit.isAchieved
-    ? (habit.type === 'good' ? '已养成 🎉' : '已克服 🎉')
+    ? (habit.type === 'good' ? '已养成' : '已克服')
     : null
+
+  const accentBorder = habit.type === 'good'
+    ? 'border-l-[3px] border-l-good'
+    : 'border-l-[3px] border-l-bad'
 
   return (
     <>
-      <div className="habit-card">
+      <div className={`habit-card ${accentBorder}`}>
         {/* 头部 */}
-        <div className="flex items-start justify-between mb-2.5">
-          <div className="flex-1 min-w-0">
+        <div className="flex items-start justify-between mb-1.5">
+          <div className="flex-1 min-w-0 pr-2">
             <div className="habit-name">{habit.name}</div>
-            {habit.note && <div className="habit-note-text">{habit.note}</div>}
+            {habit.note && <div className="habit-note-text mt-0.5">{habit.note}</div>}
           </div>
-          <div className="flex items-center gap-1.5">
-            {achieveLabel
-              ? <span className="badge-achieved">{achieveLabel}</span>
-              : <span className={habit.type === 'good' ? 'badge-good' : 'badge-bad'}>
-                  {habit.type === 'good' ? '好习惯' : '坏习惯'}
-                </span>
-            }
+          <div className="flex items-center gap-1 shrink-0">
+            {achieveLabel && <span className="badge-achieved">{achieveLabel}</span>}
             <button className="btn-delete" onClick={() => setConfirmDelete(true)}>×</button>
           </div>
         </div>
 
-        {/* 进度条 */}
+        {/* 进度 */}
         <div className="mb-3">
-          <div className="flex justify-between text-[11px] text-muted mb-1">
-            <span>坚持 {habit.totalDays} 天</span>
-            <span>{ACHIEVE_DAYS} 天目标</span>
+          <div className="flex justify-between items-center text-[11px] mb-1.5">
+            <span className="text-muted">
+              坚持 <span className="tabular-nums font-semibold text-fg">{habit.totalDays}</span> 天
+            </span>
+            <span className="text-muted tabular-nums">{Math.round(pct)}%</span>
           </div>
           <div className="progress-bar">
             <div
-              className={`h-full rounded-[2px] transition-[width_.3s_ease] ${habit.type === 'good' ? 'bg-good' : 'bg-bad'}`}
+              className={`h-full rounded-full transition-[width_.3s_ease] ${habit.type === 'good' ? 'bg-good' : 'bg-bad'}`}
               style={{ width: `${pct}%` }}
             />
           </div>
@@ -77,7 +77,7 @@ export default function HabitItem({ habit }: Props) {
               className="btn-good"
               onClick={() => dispatch({ type: 'COMPLETE_HABIT', habitId: habit.id })}
             >
-              ✓ 完成
+              完成
               {count > 0 && <span className="btn-count">{count}</span>}
             </button>
           ) : (
@@ -87,7 +87,7 @@ export default function HabitItem({ habit }: Props) {
                   className="btn-resist"
                   onClick={() => dispatch({ type: 'COMPLETE_HABIT', habitId: habit.id })}
                 >
-                  💪 已克制
+                  已克制
                   {count > 0 && <span className="btn-count">{count}</span>}
                 </button>
               )}
@@ -96,14 +96,13 @@ export default function HabitItem({ habit }: Props) {
                 disabled={gaveIn}
                 onClick={() => !gaveIn && setConfirmGaveIn(true)}
               >
-                {gaveIn ? '😔 已放纵' : '😔 放纵了'}
+                {gaveIn ? '已放纵' : '放纵了'}
               </button>
             </>
           )}
         </div>
       </div>
 
-      {/* 删除二次确认 */}
       {confirmDelete && (
         <ConfirmModal
           message={`确认删除习惯「${habit.name}」？删除后数据不可恢复。`}
@@ -117,7 +116,6 @@ export default function HabitItem({ habit }: Props) {
         />
       )}
 
-      {/* 放纵二次确认 */}
       {confirmGaveIn && (
         <ConfirmModal
           message={gaveInMsg(habit.totalDays, gaveInYesterday)}
