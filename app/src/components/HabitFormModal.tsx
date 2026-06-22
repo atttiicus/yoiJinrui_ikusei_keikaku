@@ -65,7 +65,7 @@ export default function HabitFormModal({ onSave, onClose }: Props) {
         {/* 类型选择 —— 核心决策区，放在底部最显眼位置 */}
         <div className="px-5 pb-10 shrink-0">
           <div className="text-[12px] text-muted font-semibold mb-5 text-center tracking-wide">
-            {type === null ? '选择习惯类型 *' : (type === 'good' ? '好习惯 ✓' : '坏习惯 ✓')}
+            {type === null ? '选择习惯类型 *' : (type === 'good' ? '好习惯' : '坏习惯')}
           </div>
           <div className="flex justify-center gap-16">
             <button

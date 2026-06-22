@@ -65,7 +65,11 @@ export default function PlanItem({ plan }: Props) {
                     ? 'bg-good border-good text-white'
                     : 'border-line'
                 }`}>
-                  {step.completedAt && '✓'}
+                  {step.completedAt && (
+                    <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="2 6 5 9 10 3"/>
+                    </svg>
+                  )}
                 </span>
                 <span className={`text-[13px] ${step.completedAt ? 'line-through text-muted' : 'text-fg'}`}>
                   {step.name}

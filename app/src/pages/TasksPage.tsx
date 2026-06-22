@@ -32,7 +32,9 @@ export default function TasksPage() {
       {state.tasks.length === 0 ? (
         <div className="empty-state">
           <div className="w-16 h-16 rounded-full bg-accent/20 flex items-center justify-center mx-auto mb-4">
-            <span className="text-[28px]">✓</span>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
           </div>
           <div className="text-[15px] font-semibold text-fg mb-1.5">还没有任务</div>
           <div className="text-[13px] text-muted leading-relaxed max-w-[200px] mx-auto">

@@ -35,7 +35,11 @@ export default function TaskItem({ task }: Props) {
               dispatch({ type: completed ? 'UNCOMPLETE_TASK' : 'COMPLETE_TASK', taskId: task.id })
             }}
           >
-            {completed && <span className="text-[10px] font-bold leading-none">✓</span>}
+            {completed && (
+              <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="2 6 5 9 10 3"/>
+              </svg>
+            )}
           </button>
 
           <div className="flex-1 min-w-0">
