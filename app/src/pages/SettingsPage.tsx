@@ -88,9 +88,9 @@ export default function SettingsPage({ onDebug }: Props) {
         <div className="text-[13px] text-muted mb-3">数据概览</div>
         <div className="grid grid-cols-3 gap-2">
           {[
-            { label: '习惯',   value: state.habits.length },
-            { label: '打卡',   value: state.logs.length },
-            { label: '综合分', value: state.scores.comprehensive },
+            { label: '习惯', value: state.habits.length },
+            { label: '任务', value: state.tasks.length },
+            { label: '计划', value: state.plans.length },
           ].map(({ label, value }) => (
             <div key={label} className="bg-input rounded-lg p-2.5 text-center">
               <div className="text-[11px] text-muted mb-0.5">{label}</div>

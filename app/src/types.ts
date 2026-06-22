@@ -17,6 +17,36 @@ export interface HabitLog {
   gaveIn: boolean   // 坏习惯：今天放纵了
 }
 
+export interface Task {
+  id: string
+  name: string
+  note: string
+  weekDays: number[]  // 0=周日 1=周一 ... 6=周六
+  createdAt: string
+}
+
+export interface TaskLog {
+  taskId: string
+  date: string      // YYYY-MM-DD
+  completed: boolean
+}
+
+export interface PlanStep {
+  id: string
+  name: string
+  completedAt: string | null  // YYYY-MM-DD or null
+}
+
+export interface Plan {
+  id: string
+  name: string
+  note: string
+  deadline: string          // YYYY-MM-DD
+  steps: PlanStep[]
+  completedAt: string | null
+  createdAt: string
+}
+
 export interface Scores {
   daily: number        // 当日评分（50~100）
   weekly: number       // 本周评分
@@ -27,5 +57,8 @@ export interface Scores {
 export interface AppState {
   habits: Habit[]
   logs: HabitLog[]
+  tasks: Task[]
+  taskLogs: TaskLog[]
+  plans: Plan[]
   scores: Scores
 }

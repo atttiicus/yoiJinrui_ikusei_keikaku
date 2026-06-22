@@ -71,8 +71,8 @@ export default defineConfig({
     ['progress-bar',    'h-1.5 bg-line rounded-full overflow-hidden'],
 
     // ── 习惯类型选择器 ───────────────────────────────────────
-    ['type-btn',        'flex flex-col items-center gap-2 bg-transparent border-none cursor-pointer text-muted text-[13px] font-semibold transition-colors duration-150'],
-    ['type-btn-circle', 'w-[52px] h-[52px] rounded-full flex items-center justify-center text-2xl font-bold border-2 border-line transition-all duration-150'],
+    ['type-btn',        'flex flex-col items-center gap-2.5 bg-transparent border-none cursor-pointer text-muted text-[13px] font-semibold transition-colors duration-150'],
+    ['type-btn-circle', 'w-[68px] h-[68px] rounded-full flex items-center justify-center text-[28px] font-bold border-2 border-line transition-all duration-200 active:scale-95'],
 
     // ── 分类标签 ─────────────────────────────────────────────
     ['section-label', 'text-[11px] text-muted font-semibold tracking-[.1em] uppercase pt-1 pb-1'],

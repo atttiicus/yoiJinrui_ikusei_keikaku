@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react'
-import type { AppState, Habit, HabitLog } from './types'
+import type { AppState, Habit, HabitLog, Task, TaskLog, Plan, PlanStep } from './types'
 
 // ── 评分常量 ──────────────────────────────────────────────────
 const DAILY_INITIAL = 50
@@ -9,15 +9,24 @@ const GOOD_REPEAT = 3
 const BAD_FIRST = 8
 const BAD_REPEAT = 2
 const BAD_GAVE_IN = -10
+const TASK_COMPLETE = 5
+const TASK_MISS = -3
+const PLAN_STEP_COMPLETE = 2
+const PLAN_COMPLETE = 10
+const PLAN_OVERDUE = -8
 const ACHIEVE_DAYS = 60
 
 const todayStr = () => new Date().toISOString().split('T')[0]
+const todayDow = () => new Date().getDay()
 
 const STORAGE_KEY = 'yoijinrui_v1'
 
 const freshState = (): AppState => ({
-  habits: [],
-  logs: [],
+  habits:   [],
+  logs:     [],
+  tasks:    [],
+  taskLogs: [],
+  plans:    [],
   scores: { daily: DAILY_INITIAL, weekly: 0, comprehensive: 0, lastDate: todayStr() },
 })
 
@@ -28,6 +37,14 @@ type Action =
   | { type: 'DELETE_HABIT'; id: string }
   | { type: 'COMPLETE_HABIT'; habitId: string }
   | { type: 'GAVE_IN'; habitId: string }
+  | { type: 'ADD_TASK'; task: Task }
+  | { type: 'DELETE_TASK'; id: string }
+  | { type: 'COMPLETE_TASK'; taskId: string }
+  | { type: 'UNCOMPLETE_TASK'; taskId: string }
+  | { type: 'ADD_PLAN'; plan: Plan }
+  | { type: 'DELETE_PLAN'; id: string }
+  | { type: 'COMPLETE_PLAN_STEP'; planId: string; stepId: string }
+  | { type: 'COMPLETE_PLAN'; planId: string }
   | { type: 'DAILY_RESET' }
   | { type: 'SET_SCORES'; daily: number; weekly: number; comprehensive: number }
   | { type: 'SET_HABIT_DAYS'; habitId: string; days: number }
@@ -46,8 +63,21 @@ function applyScore(scores: AppState['scores'], delta: number): AppState['scores
 
 function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
-    case 'LOAD':
-      return action.state
+    case 'LOAD': {
+      // 兼容旧备份（可能缺少 tasks/taskLogs/plans 字段）
+      const s = action.state as unknown as {
+        habits: Habit[]; logs: HabitLog[]; scores: AppState['scores']
+        tasks?: Task[]; taskLogs?: TaskLog[]; plans?: Plan[]
+      }
+      return {
+        habits:   s.habits,
+        logs:     s.logs,
+        tasks:    s.tasks    ?? [],
+        taskLogs: s.taskLogs ?? [],
+        plans:    s.plans    ?? [],
+        scores:   s.scores,
+      }
+    }
 
     case 'ADD_HABIT':
       return { ...state, habits: [...state.habits, action.habit] }
@@ -56,7 +86,7 @@ function reducer(state: AppState, action: Action): AppState {
       return {
         ...state,
         habits: state.habits.filter(h => h.id !== action.id),
-        logs: state.logs.filter(l => l.habitId !== action.id),
+        logs:   state.logs.filter(l => l.habitId !== action.id),
       }
 
     case 'COMPLETE_HABIT': {
@@ -89,8 +119,6 @@ function reducer(state: AppState, action: Action): AppState {
 
     case 'GAVE_IN': {
       const date = todayStr()
-
-      // 昨天是否也放纵了（用于判断连续两天放纵）
       const d = new Date()
       d.setDate(d.getDate() - 1)
       const yesterdayStr = d.toISOString().split('T')[0]
@@ -101,15 +129,10 @@ function reducer(state: AppState, action: Action): AppState {
       const habit = state.habits.find(h => h.id === action.habitId)!
       const days  = habit.totalDays
 
-      // 坚持天数惩罚规则：
-      // <= 15 天 → 直接清零
-      // > 15 天  → 扣 1 天；若连续两天放纵则清零
-      let newDays = days
-      if (days > 15) {
-        newDays = gaveInYesterday ? 0 : Math.max(0, days - 1)
-      } else {
-        newDays = 0
-      }
+      // ≤15 天 → 清零；>15 天 → 扣 1 天；连续两天放纵 → 清零
+      const newDays = days > 15
+        ? (gaveInYesterday ? 0 : Math.max(0, days - 1))
+        : 0
 
       const existing = state.logs.find(l => l.habitId === action.habitId && l.date === date)
       const logs: HabitLog[] = existing
@@ -127,16 +150,111 @@ function reducer(state: AppState, action: Action): AppState {
       return { ...state, habits, logs, scores: applyScore(state.scores, BAD_GAVE_IN) }
     }
 
-    case 'DAILY_RESET':
+    case 'ADD_TASK':
+      return { ...state, tasks: [...state.tasks, action.task] }
+
+    case 'DELETE_TASK':
+      return {
+        ...state,
+        tasks:    state.tasks.filter(t => t.id !== action.id),
+        taskLogs: state.taskLogs.filter(l => l.taskId !== action.id),
+      }
+
+    case 'COMPLETE_TASK': {
+      const date = todayStr()
+      const existing = state.taskLogs.find(l => l.taskId === action.taskId && l.date === date)
+      const taskLogs: TaskLog[] = existing
+        ? state.taskLogs.map(l =>
+            l.taskId === action.taskId && l.date === date ? { ...l, completed: true } : l
+          )
+        : [...state.taskLogs, { taskId: action.taskId, date, completed: true }]
+      return { ...state, taskLogs, scores: applyScore(state.scores, TASK_COMPLETE) }
+    }
+
+    case 'UNCOMPLETE_TASK': {
+      const date = todayStr()
+      const existing = state.taskLogs.find(l => l.taskId === action.taskId && l.date === date)
+      if (!existing?.completed) return state
+      const taskLogs = state.taskLogs.map(l =>
+        l.taskId === action.taskId && l.date === date ? { ...l, completed: false } : l
+      )
+      return { ...state, taskLogs, scores: applyScore(state.scores, -TASK_COMPLETE) }
+    }
+
+    case 'ADD_PLAN':
+      return { ...state, plans: [...state.plans, action.plan] }
+
+    case 'DELETE_PLAN':
+      return { ...state, plans: state.plans.filter(p => p.id !== action.id) }
+
+    case 'COMPLETE_PLAN_STEP': {
+      const date = todayStr()
+      let scoresDelta = 0
+      const plans = state.plans.map(p => {
+        if (p.id !== action.planId) return p
+        const steps: PlanStep[] = p.steps.map(s => {
+          if (s.id !== action.stepId) return s
+          if (s.completedAt) {
+            scoresDelta = -PLAN_STEP_COMPLETE
+            return { ...s, completedAt: null }
+          }
+          scoresDelta = PLAN_STEP_COMPLETE
+          return { ...s, completedAt: date }
+        })
+        return { ...p, steps }
+      })
+      return {
+        ...state,
+        plans,
+        scores: { ...state.scores, comprehensive: Math.max(0, state.scores.comprehensive + scoresDelta) },
+      }
+    }
+
+    case 'COMPLETE_PLAN': {
+      const date = todayStr()
+      const plans = state.plans.map(p =>
+        p.id !== action.planId ? p : { ...p, completedAt: date }
+      )
+      return {
+        ...state,
+        plans,
+        scores: { ...state.scores, comprehensive: state.scores.comprehensive + PLAN_COMPLETE },
+      }
+    }
+
+    case 'DAILY_RESET': {
+      const d = new Date()
+      d.setDate(d.getDate() - 1)
+      const yesterday = d.toISOString().split('T')[0]
+      const yesterdayDow = d.getDay()
+
+      // 昨日应完成但未完成的任务数量
+      const missedTaskCount = state.tasks.filter(t => {
+        if (!t.weekDays.includes(yesterdayDow)) return false
+        return !state.taskLogs.some(l => l.taskId === t.id && l.date === yesterday && l.completed)
+      }).length
+
+      // 昨日截止但未完成的计划数量
+      const expiredPlanCount = state.plans.filter(
+        p => p.deadline === yesterday && p.completedAt === null
+      ).length
+
+      const dailyAfterPenalty = Math.max(0, state.scores.daily + missedTaskCount * TASK_MISS)
+      const comprehensiveAfterPenalty = Math.max(
+        0, state.scores.comprehensive + expiredPlanCount * PLAN_OVERDUE
+      )
+
       return {
         ...state,
         scores: {
           ...state.scores,
-          daily: DAILY_INITIAL,
-          weekly: state.scores.weekly + state.scores.daily,
-          lastDate: todayStr(),
+          daily:         DAILY_INITIAL,
+          weekly:        state.scores.weekly + dailyAfterPenalty,
+          comprehensive: comprehensiveAfterPenalty,
+          lastDate:      todayStr(),
         },
       }
+    }
 
     case 'SET_SCORES':
       return {
@@ -168,7 +286,6 @@ function reducer(state: AppState, action: Action): AppState {
       const d = new Date()
       d.setDate(d.getDate() - 1)
       const yesterday = d.toISOString().split('T')[0]
-      // 移除昨天该习惯的旧记录，插入一条 gaveIn=true 的记录
       const logs: HabitLog[] = [
         ...state.logs.filter(l => !(l.habitId === action.habitId && l.date === yesterday)),
         { habitId: action.habitId, date: yesterday, count: 0, gaveIn: true },
@@ -182,14 +299,22 @@ function reducer(state: AppState, action: Action): AppState {
 }
 
 // ── 同步初始化：从 localStorage 读取，并检查每日重置 ───────────
-// 使用 useReducer 第三个参数 init，确保初始 state 就是持久化的数据，
-// 彻底避免「首次渲染用空 state 覆盖已存数据」的竞态问题。
 function initState(_: undefined): AppState {
   try {
     const saved = localStorage.getItem(STORAGE_KEY)
     if (saved) {
-      const loaded: AppState = JSON.parse(saved)
-      // 如果跨天了，立即执行每日重置
+      const raw = JSON.parse(saved) as unknown as {
+        habits?: Habit[]; logs?: HabitLog[]; scores?: AppState['scores']
+        tasks?: Task[]; taskLogs?: TaskLog[]; plans?: Plan[]
+      }
+      const loaded: AppState = {
+        habits:   raw.habits   ?? [],
+        logs:     raw.logs     ?? [],
+        tasks:    raw.tasks    ?? [],
+        taskLogs: raw.taskLogs ?? [],
+        plans:    raw.plans    ?? [],
+        scores:   raw.scores   ?? { daily: DAILY_INITIAL, weekly: 0, comprehensive: 0, lastDate: todayStr() },
+      }
       if (loaded.scores.lastDate !== todayStr()) {
         return reducer(loaded, { type: 'DAILY_RESET' })
       }
@@ -208,7 +333,6 @@ const StoreContext = createContext<{
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, undefined, initState)
 
-  // 每次 state 变化就持久化，初始化时已正确加载，不会再覆盖
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
   }, [state])
@@ -226,4 +350,4 @@ export function useStore() {
   return ctx
 }
 
-export { todayStr, ACHIEVE_DAYS, STORAGE_KEY, freshState }
+export { todayStr, todayDow, ACHIEVE_DAYS, STORAGE_KEY, freshState }
