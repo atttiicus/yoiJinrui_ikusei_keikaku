@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { todayStr } from '../store'
 
 interface Props {
   onSave: (name: string, note: string, deadline: string, steps: string[]) => void
@@ -52,6 +53,7 @@ export default function PlanFormModal({ onSave, onClose }: Props) {
             <input
               className="form-input"
               type="date"
+              min={todayStr()}
               value={deadline}
               onChange={e => setDeadline(e.target.value)}
             />

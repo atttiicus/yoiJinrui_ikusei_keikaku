@@ -55,7 +55,7 @@ export default function DebugPage({ onBack }: Props) {
   )
 
   const showMsg = (text: string, ok: boolean) => {
-    setMsg({ text, ok })
+    setMsg({ text, ok })  
     setTimeout(() => setMsg(null), 4000)
   }
 

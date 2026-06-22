@@ -16,7 +16,11 @@ const PLAN_COMPLETE = 10
 const PLAN_OVERDUE = -8
 const ACHIEVE_DAYS = 60
 
-const todayStr = () => new Date().toISOString().split('T')[0]
+const todayStr = () => {
+  const d = new Date()
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
 const todayDow = () => new Date().getDay()
 
 const STORAGE_KEY = 'yoijinrui_v1'
@@ -192,6 +196,7 @@ function reducer(state: AppState, action: Action): AppState {
       let scoresDelta = 0
       const plans = state.plans.map(p => {
         if (p.id !== action.planId) return p
+        if (p.completedAt !== null) return p  // 计划已完成，步骤不可再变更
         const steps: PlanStep[] = p.steps.map(s => {
           if (s.id !== action.stepId) return s
           if (s.completedAt) {
@@ -211,6 +216,8 @@ function reducer(state: AppState, action: Action): AppState {
     }
 
     case 'COMPLETE_PLAN': {
+      const targetPlan = state.plans.find(p => p.id === action.planId)
+      if (!targetPlan || targetPlan.completedAt !== null) return state  // 已完成，防止重复领分
       const date = todayStr()
       const plans = state.plans.map(p =>
         p.id !== action.planId ? p : { ...p, completedAt: date }
@@ -244,12 +251,15 @@ function reducer(state: AppState, action: Action): AppState {
         0, state.scores.comprehensive + expiredPlanCount * PLAN_OVERDUE
       )
 
+      // 若今天是周一（昨天是周日），开始新一周，本周积分重置后仅计入昨日得分
+      const isWeekStart = new Date().getDay() === 1
+
       return {
         ...state,
         scores: {
           ...state.scores,
           daily:         DAILY_INITIAL,
-          weekly:        state.scores.weekly + dailyAfterPenalty,
+          weekly:        isWeekStart ? dailyAfterPenalty : state.scores.weekly + dailyAfterPenalty,
           comprehensive: comprehensiveAfterPenalty,
           lastDate:      todayStr(),
         },

@@ -32,7 +32,7 @@ export default defineConfig({
     ['card', 'bg-card border border-line rounded-[16px] p-5 mx-4 mb-3 shadow-[0_2px_12px_rgba(0,0,0,.06)]'],
 
     // ── 按钮 ─────────────────────────────────────────────────
-    ['btn',        'border-none rounded-[10px] px-4 py-2 text-[13px] font-semibold cursor-pointer transition-all duration-150 active:scale-95 hover:brightness-95 inline-flex items-center gap-1 whitespace-nowrap select-none'],
+    ['btn',        'border-none rounded-[10px] px-4 py-2 text-[13px] font-semibold cursor-pointer transition-all duration-150 active:scale-95 hover:brightness-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 inline-flex items-center gap-1 whitespace-nowrap select-none'],
     ['btn-good',   'btn bg-accent text-accent-fg flex-1 justify-center'],
     ['btn-resist', 'btn bg-accent text-accent-fg flex-1 justify-center'],
     ['btn-gavein', 'btn bg-bad-dim  text-bad     flex-1 justify-center'],
