@@ -32,15 +32,15 @@ function NumInput({ value, onChange, min = 0, max }: {
     </div>
   )
 }
-
+  
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
     <div className="px-4 pt-4 pb-1 text-[11px] text-muted font-semibold uppercase tracking-wider">
       {children}
     </div>
   )
-}
-
+} 
+    
 export default function DebugPage({ onBack }: Props) {
   const { state, dispatch } = useStore()
   const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null)
@@ -71,7 +71,7 @@ export default function DebugPage({ onBack }: Props) {
               <polyline points="15 18 9 12 15 6"/>
             </svg>
           </button>
-          <div>
+          <div>   
             <div className="page-title">开发者工具</div>
             <div className="page-subtitle">仅供调试使用</div>
           </div>

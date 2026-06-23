@@ -1,9 +1,13 @@
-import { useState } from 'react'
-import { useStore, todayStr, ACHIEVE_DAYS } from '../store'
+import { memo, useState } from 'react'
+import { useDispatch, ACHIEVE_DAYS } from '../store'
 import ConfirmModal from './ConfirmModal'
-import type { Habit } from '../types'
+import type { Habit, HabitLog } from '../types'
 
-interface Props { habit: Habit }
+interface Props {
+  habit: Habit
+  log: HabitLog | undefined
+  gaveInYesterday: boolean
+}
 
 function gaveInMsg(days: number, gaveInYesterday: boolean): string {
   if (days > 15) {
@@ -14,18 +18,10 @@ function gaveInMsg(days: number, gaveInYesterday: boolean): string {
   return `确认今日未能克制？`
 }
 
-export default function HabitItem({ habit }: Props) {
-  const { state, dispatch } = useStore()
-  const today  = todayStr()
-  const log    = state.logs.find(l => l.habitId === habit.id && l.date === today)
+const HabitItem = memo(function HabitItem({ habit, log, gaveInYesterday }: Props) {
+  const dispatch = useDispatch()
   const count  = log?.count ?? 0
   const gaveIn = log?.gaveIn ?? false
-
-  const d = new Date(); d.setDate(d.getDate() - 1)
-  const yesterday = d.toISOString().split('T')[0]
-  const gaveInYesterday = state.logs.some(
-    l => l.habitId === habit.id && l.date === yesterday && l.gaveIn
-  )
 
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [confirmGaveIn, setConfirmGaveIn] = useState(false)
@@ -42,7 +38,6 @@ export default function HabitItem({ habit }: Props) {
   return (
     <>
       <div className={`habit-card ${accentBorder}`}>
-        {/* 头部 */}
         <div className="flex items-start justify-between mb-1.5">
           <div className="flex-1 min-w-0 pr-2">
             <div className="habit-name">{habit.name}</div>
@@ -54,7 +49,6 @@ export default function HabitItem({ habit }: Props) {
           </div>
         </div>
 
-        {/* 进度 */}
         <div className="mb-3">
           <div className="flex justify-between items-center text-[11px] mb-1.5">
             <span className="text-muted">
@@ -70,7 +64,6 @@ export default function HabitItem({ habit }: Props) {
           </div>
         </div>
 
-        {/* 操作按钮 */}
         <div className="flex gap-2">
           {habit.type === 'good' ? (
             <button
@@ -130,4 +123,6 @@ export default function HabitItem({ habit }: Props) {
       )}
     </>
   )
-}
+})
+
+export default HabitItem

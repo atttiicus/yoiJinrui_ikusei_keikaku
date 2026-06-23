@@ -16,11 +16,19 @@ const PLAN_COMPLETE = 10
 const PLAN_OVERDUE = -8
 const ACHIEVE_DAYS = 60
 
+const pad = (n: number) => String(n).padStart(2, '0')
+
 const todayStr = () => {
   const d = new Date()
-  const pad = (n: number) => String(n).padStart(2, '0')
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 }
+
+const yesterdayStr = () => {
+  const d = new Date()
+  d.setDate(d.getDate() - 1)
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
+
 const todayDow = () => new Date().getDay()
 
 const STORAGE_KEY = 'yoijinrui_v1'
@@ -334,11 +342,9 @@ function initState(_: undefined): AppState {
   return freshState()
 }
 
-// ── Context ───────────────────────────────────────────────────
-const StoreContext = createContext<{
-  state: AppState
-  dispatch: React.Dispatch<Action>
-} | null>(null)
+// ── Context（拆分 State / Dispatch，dispatch 稳定不触发重渲染）──
+const StateContext    = createContext<AppState | null>(null)
+const DispatchContext = createContext<React.Dispatch<Action> | null>(null)
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, undefined, initState)
@@ -348,16 +354,26 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, [state])
 
   return (
-    <StoreContext.Provider value={{ state, dispatch }}>
-      {children}
-    </StoreContext.Provider>
+    <DispatchContext.Provider value={dispatch}>
+      <StateContext.Provider value={state}>
+        {children}
+      </StateContext.Provider>
+    </DispatchContext.Provider>
   )
 }
 
 export function useStore() {
-  const ctx = useContext(StoreContext)
-  if (!ctx) throw new Error('useStore must be used within StoreProvider')
-  return ctx
+  const state    = useContext(StateContext)
+  const dispatch = useContext(DispatchContext)
+  if (!state || !dispatch) throw new Error('useStore must be used within StoreProvider')
+  return { state, dispatch }
 }
 
-export { todayStr, todayDow, ACHIEVE_DAYS, STORAGE_KEY, freshState }
+/** 仅需 dispatch 的组件使用此 hook，不订阅 state 变化，避免无效重渲染 */
+export function useDispatch() {
+  const dispatch = useContext(DispatchContext)
+  if (!dispatch) throw new Error('useDispatch must be used within StoreProvider')
+  return dispatch
+}
+
+export { todayStr, yesterdayStr, todayDow, ACHIEVE_DAYS, STORAGE_KEY, freshState }

@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useStore } from '../store'
+import { useMemo, useState } from 'react'
+import { useStore, todayStr, yesterdayStr } from '../store'
 import HabitItem from '../components/HabitItem'
 import HabitFormModal from '../components/HabitFormModal'
 import type { Habit, HabitType } from '../types'
@@ -8,18 +8,31 @@ export default function HabitsPage() {
   const { state, dispatch } = useStore()
   const [showForm, setShowForm] = useState(false)
 
+  const today     = todayStr()
+  const yesterday = yesterdayStr()
+
+  // O(M) 一次遍历建 Map，避免每个 HabitItem 各自 O(M) 遍历
+  const todayLogMap = useMemo(
+    () => new Map(state.logs.filter(l => l.date === today).map(l => [l.habitId, l])),
+    [state.logs, today]
+  )
+  const yesterdayGaveInSet = useMemo(
+    () => new Set(state.logs.filter(l => l.date === yesterday && l.gaveIn).map(l => l.habitId)),
+    [state.logs, yesterday]
+  )
+
+  const good = useMemo(() => state.habits.filter(h => h.type === 'good'), [state.habits])
+  const bad  = useMemo(() => state.habits.filter(h => h.type === 'bad'),  [state.habits])
+
   const handleAdd = (name: string, note: string, type: HabitType) => {
     const habit: Habit = {
       id: crypto.randomUUID(), name, note, type,
-      createdAt: new Date().toISOString().split('T')[0],
+      createdAt: today,
       totalDays: 0, isAchieved: false,
     }
     dispatch({ type: 'ADD_HABIT', habit })
     setShowForm(false)
   }
-
-  const good = state.habits.filter(h => h.type === 'good')
-  const bad  = state.habits.filter(h => h.type === 'bad')
 
   return (
     <div className="page">
@@ -45,13 +58,27 @@ export default function HabitsPage() {
           {good.length > 0 && (
             <>
               <div className="section-label">好习惯 · {good.length}</div>
-              {good.map(h => <HabitItem key={h.id} habit={h} />)}
+              {good.map(h => (
+                <HabitItem
+                  key={h.id}
+                  habit={h}
+                  log={todayLogMap.get(h.id)}
+                  gaveInYesterday={yesterdayGaveInSet.has(h.id)}
+                />
+              ))}
             </>
           )}
           {bad.length > 0 && (
             <>
               <div className="section-label pt-3">坏习惯 · {bad.length}</div>
-              {bad.map(h => <HabitItem key={h.id} habit={h} />)}
+              {bad.map(h => (
+                <HabitItem
+                  key={h.id}
+                  habit={h}
+                  log={todayLogMap.get(h.id)}
+                  gaveInYesterday={yesterdayGaveInSet.has(h.id)}
+                />
+              ))}
             </>
           )}
         </div>

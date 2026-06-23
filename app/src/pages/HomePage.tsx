@@ -1,4 +1,5 @@
-import { useStore } from '../store'
+import { useMemo } from 'react'
+import { useStore, todayStr } from '../store'
 
 const RADIUS = 54
 const CIRC   = 2 * Math.PI * RADIUS
@@ -40,9 +41,12 @@ export default function HomePage() {
     month: 'long', day: 'numeric', weekday: 'long',
   })
 
-  const todayDate      = new Date().toISOString().split('T')[0]
-  const completedToday = state.logs.filter(l => l.date === todayDate && l.count > 0).length
-  const progressPct    = state.habits.length > 0
+  const today          = todayStr()
+  const completedToday = useMemo(
+    () => state.logs.filter(l => l.date === today && l.count > 0).length,
+    [state.logs, today]
+  )
+  const progressPct = state.habits.length > 0
     ? Math.round((completedToday / state.habits.length) * 100)
     : 0
 

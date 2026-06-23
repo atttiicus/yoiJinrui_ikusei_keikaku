@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useStore, todayStr } from '../store'
 import PlanItem from '../components/PlanItem'
 import PlanFormModal from '../components/PlanFormModal'
@@ -9,9 +9,9 @@ export default function PlansPage() {
   const [showForm, setShowForm] = useState(false)
 
   const today        = todayStr()
-  const activePlans  = state.plans.filter(p => p.completedAt === null && p.deadline >= today)
-  const overduePlans = state.plans.filter(p => p.completedAt === null && p.deadline < today)
-  const donePlans    = state.plans.filter(p => p.completedAt !== null)
+  const activePlans  = useMemo(() => state.plans.filter(p => p.completedAt === null && p.deadline >= today), [state.plans, today])
+  const overduePlans = useMemo(() => state.plans.filter(p => p.completedAt === null && p.deadline < today),  [state.plans, today])
+  const donePlans    = useMemo(() => state.plans.filter(p => p.completedAt !== null),                        [state.plans])
 
   const handleAdd = (name: string, note: string, deadline: string, stepNames: string[]) => {
     const steps: PlanStep[] = stepNames.map(n => ({

@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useStore, todayStr } from '../store'
+import { memo, useState } from 'react'
+import { useDispatch, todayStr } from '../store'
 import ConfirmModal from './ConfirmModal'
 import type { Plan } from '../types'
 
@@ -11,8 +11,8 @@ function formatDeadline(deadline: string): string {
   })
 }
 
-export default function PlanItem({ plan }: Props) {
-  const { dispatch } = useStore()
+const PlanItem = memo(function PlanItem({ plan }: Props) {
+  const dispatch = useDispatch()
   const [confirmDelete,   setConfirmDelete]   = useState(false)
   const [confirmComplete, setConfirmComplete] = useState(false)
 
@@ -116,4 +116,6 @@ export default function PlanItem({ plan }: Props) {
       )}
     </>
   )
-}
+})
+
+export default PlanItem

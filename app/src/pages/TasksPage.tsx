@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useStore, todayDow } from '../store'
+import { useMemo, useState } from 'react'
+import { useStore, todayStr, todayDow } from '../store'
 import TaskItem from '../components/TaskItem'
 import TaskFormModal from '../components/TaskFormModal'
 import type { Task } from '../types'
@@ -8,15 +8,22 @@ export default function TasksPage() {
   const { state, dispatch } = useStore()
   const [showForm, setShowForm] = useState(false)
 
-  const dow        = todayDow()
-  const todayDate  = new Date().toISOString().split('T')[0]
-  const todayTasks = state.tasks.filter(t => t.weekDays.includes(dow))
-  const otherTasks = state.tasks.filter(t => !t.weekDays.includes(dow))
+  const today = todayStr()
+  const dow   = todayDow()
+
+  const todayTasks = useMemo(() => state.tasks.filter(t => t.weekDays.includes(dow)),  [state.tasks, dow])
+  const otherTasks = useMemo(() => state.tasks.filter(t => !t.weekDays.includes(dow)), [state.tasks, dow])
+
+  // O(M) 一次遍历，避免每个 TaskItem 各自遍历 taskLogs
+  const completedSet = useMemo(
+    () => new Set(state.taskLogs.filter(l => l.date === today && l.completed).map(l => l.taskId)),
+    [state.taskLogs, today]
+  )
 
   const handleAdd = (name: string, note: string, weekDays: number[]) => {
     const task: Task = {
       id: crypto.randomUUID(), name, note, weekDays,
-      createdAt: todayDate,
+      createdAt: today,
     }
     dispatch({ type: 'ADD_TASK', task })
     setShowForm(false)
@@ -46,13 +53,17 @@ export default function TasksPage() {
           {todayTasks.length > 0 && (
             <>
               <div className="section-label">今日 · {todayTasks.length}</div>
-              {todayTasks.map(t => <TaskItem key={t.id} task={t} />)}
+              {todayTasks.map(t => (
+                <TaskItem key={t.id} task={t} completed={completedSet.has(t.id)} />
+              ))}
             </>
           )}
           {otherTasks.length > 0 && (
             <>
               <div className="section-label pt-3">其余日 · {otherTasks.length}</div>
-              {otherTasks.map(t => <TaskItem key={t.id} task={t} />)}
+              {otherTasks.map(t => (
+                <TaskItem key={t.id} task={t} completed={completedSet.has(t.id)} />
+              ))}
             </>
           )}
         </div>

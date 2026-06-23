@@ -1,27 +1,26 @@
-import { useState } from 'react'
-import { useStore, todayStr, todayDow } from '../store'
+import { memo, useState } from 'react'
+import { useDispatch, todayDow } from '../store'
 import ConfirmModal from './ConfirmModal'
 import type { Task } from '../types'
 
-interface Props { task: Task }
+interface Props {
+  task: Task
+  completed: boolean
+}
 
 const DAY_LABELS = ['日', '一', '二', '三', '四', '五', '六']
 
-export default function TaskItem({ task }: Props) {
-  const { state, dispatch } = useStore()
+const TaskItem = memo(function TaskItem({ task, completed }: Props) {
+  const dispatch = useDispatch()
   const [confirmDelete, setConfirmDelete] = useState(false)
 
-  const today    = todayStr()
-  const dow      = todayDow()
-  const isToday  = task.weekDays.includes(dow)
-  const log      = state.taskLogs.find(l => l.taskId === task.id && l.date === today)
-  const completed = log?.completed ?? false
+  const dow     = todayDow()
+  const isToday = task.weekDays.includes(dow)
 
   return (
     <>
       <div className="habit-card">
         <div className="flex items-center gap-3">
-          {/* 完成圆圈按钮 */}
           <button
             className={`w-6 h-6 rounded-full border-2 shrink-0 flex items-center justify-center transition-all duration-150 ${
               completed
@@ -52,7 +51,6 @@ export default function TaskItem({ task }: Props) {
           <button className="btn-delete shrink-0" onClick={() => setConfirmDelete(true)}>×</button>
         </div>
 
-        {/* 周几指示器 */}
         <div className="flex gap-1 mt-2.5 ml-9">
           {[0, 1, 2, 3, 4, 5, 6].map(d => (
             <span
@@ -85,4 +83,6 @@ export default function TaskItem({ task }: Props) {
       )}
     </>
   )
-}
+})
+
+export default TaskItem
